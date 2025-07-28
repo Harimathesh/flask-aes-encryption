@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AES Encryption</title>
+    <style>
+        :root {
+            --bg-color: #f0f8f0; /* Light green background */
+            --card-color: #ffffff;
+            --text-color: #2c3e50;
+            --primary-color: #4CAF50;
+            --primary-hover: #45a049;
+            --input-border: #ddd;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logout-btn {
+            background-color: #f44336;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .operations-container {
+            display: flex;
+            gap: 30px;
+        }
+
+        .operation-column {
+            flex: 1;
+        }
+
+        .operation-section {
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin: 15px 0 8px 0;
+        }
+
+        .key-size-selector {
+            margin-bottom: 15px;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-box {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .file-upload-label:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #file-name {
+            font-size: 14px;
+            color: #666;
+        }
+
+        #image-upload {
+            display: none;
+        }
+
+        .support-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .operations-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .operation-section {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Welcome to AES Encryption</h1>
+            {% if 'username' in session %}
+                <div>
+                    <span style="margin-right: 15px;">Welcome, {{ username }}!</span>
+                    <a href="/logout"><button class="logout-btn">Logout</button></a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="operations-container">
+            <!-- Left Column - Text Operations -->
+            <div class="operation-column">
+                <div class="operation-section">
+                    <h2>Text Encryption</h2>
+                    <p class="support-text">Support: Plain text, JSON, YAML, XML, .env, config files, code snippets (max 10MB)</p>
+                    
+                    <div class="key-size-selector">
+                        <select name="key_size" id="key_size">
+                            <option value="128" {% if key_size == 128 %}selected{% endif %}>AES-128</option>
+                            <option value="256" {% if key_size == 256 %}selected{% endif %}>AES-256</option>
+                        </select>
+                    </div>
+                    
+                    <form method="POST">
+                        <textarea name="text_to_encrypt" placeholder="Enter text, JSON, YAML, XML, config files, or code..."></textarea>
+                        <button type="submit" name="encrypt_text">Encrypt</button>
+                    </form>
+                    
+                    {% if encrypted_result %}
+                    <div class="result-box">
+                        <h3>Encrypted Result:</h3>
+                        <p>{{ encrypted_result }}</p>
+                        <h3>Encryption Key:</h3>
+                        <p>{{ encryption_key }}</p>
+                        <button onclick="copyToClipboard('{{ encrypted_result }}')">Copy Encrypted Data</button>
+                        <button onclick="copyToClipboard('{{ encryption_key }}')">Copy Key</button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="operation-section">
+                    <h2>Text Decryption</h2>
+                    <form method="POST">
+                        <textarea name="encrypted_text" placeholder="Paste encrypted data here"></textarea>
+                        <input type="text" name="encryption_key" placeholder="Paste encryption key here">
+                        <button type="submit" name="decrypt_text">Decrypt</button>
+                    </form>
+                    
+                    {% if decrypted_result %}
+                    <div class="result-box">
+                        <h3>Decrypted Result:</h3>
+                        <p>{{ decrypted_result }}</p>
+                        <button onclick="copyToClipboard('{{ decrypted_result }}')">Copy Decrypted Text</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Column - Image Operations -->
+            <div class="operation-column">
+                <div class="operation-section">
+                    <h2>Image Encryption</h2>
+                    <p class="support-text">Support: PNG, JPG, JPEG, GIF, BMP, WEBP (max 20MB)</p>
+                    
+                    <div class="key-size-selector">
+                        <select name="key_size" id="image_key_size">
+                            <option value="128" {% if key_size == 128 %}selected{% endif %}>AES-128</option>
+                            <option value="256" {% if key_size == 256 %}selected{% endif %}>AES-256</option>
+                        </select>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="image-upload" class="file-upload-label">Choose File</label>
+                            <span id="file-name">No file chosen</span>
+                            <input type="file" id="image-upload" name="image_file" accept="image/*">
+                        </div>
+                        <button type="submit" name="encrypt_image">Encrypt Image</button>
+                    </form>
+                    
+                    {% if image_data %}
+                    <div class="result-box">
+                        <h3>Image Encryption Key:</h3>
+                        <p>{{ encryption_key }}</p>
+                        <a href="/download_encrypted_image" download><button>Download Encrypted Image</button></a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="operation-section">
+                    <h2>Image Decryption</h2>
+                    <form method="POST">
+                        <textarea name="encrypted_image_data" placeholder="Paste encrypted image data here"></textarea>
+                        <input type="text" name="image_encryption_key" placeholder="Paste encryption key here">
+                        <button type="submit" name="decrypt_image">Decrypt Image</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            document.getElementById('file-name').textContent = fileName;
+        });
+    </script>
+</body>
+</html>
